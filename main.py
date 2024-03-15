@@ -68,15 +68,19 @@ def show_tasks(tasks):
         current_date = datetime.now()
 
         for index, task in enumerate(tasks,1):
+        # iterates over each item in tasks whilst keeping track of the index, index starts at 1 for ease
 
             due_date = datetime.strptime(task['due_date'], "%Y-%m-%d")
+            #creates local variable of due_date, too bulky & unsightly otherwise
 
+            # Sets each row to a different colour depending on due_date & status
+            # RED = late due date and incomplete, ORANGE = late due date but complete, GREEN = timely due date 
             if due_date < current_date and task['status'] != "Completed" :
-                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="red")
+                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="white on red")
             elif due_date < current_date and task['status'] == "Completed" :
-                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="orange1")
+                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="white on orange_red1")
             else:
-                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="green")
+                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="white on green")
 
         console.print(table)
 
