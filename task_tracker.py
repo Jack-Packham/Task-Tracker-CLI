@@ -1,6 +1,5 @@
 import os
 import json
-import time
 from datetime import datetime
 from rich import print
 from rich.console import Console
@@ -15,7 +14,6 @@ TASKS_FILE = "tasks.json"
 def reset_table():
     #Makes table variable global (such that all functions may use it)
     global table
-    
     #Reinitialised the table and adds it's columns
     table = Table(title="Tasks")
 
@@ -28,14 +26,17 @@ def load_tasks(task_json):
 
     # Uses os path to oepn TASKS_FILE json, if it exists. Uses json library to open loaded json
     if os.path.exists(task_json):
-        with open(task_json, 'r') as taskfile:
+        with open(task_json, 'r', encoding="utf-8") as taskfile:
             return json.load(taskfile)
     else:
         return []
 
 def save_tasks(task_dir, tasks):
-    # with the TASKS_FILE json open as taskfile, append tasks to taskfile with an indent of 4 so it isn't grumpy
-    with open(task_dir, 'w') as taskfile:
+    '''
+    with the TASKS_FILE json open as taskfile, 
+    append tasks to taskfile with an indent of 4 so it isn't grumpy
+    '''
+    with open(task_dir, 'w', encoding="utf-8") as taskfile:
         json.dump(tasks, taskfile, indent=4)
 
 def show_task(tasks, task_index):
@@ -49,8 +50,9 @@ def show_task(tasks, task_index):
             print(f"Description - {task['description']}")
             print(f"Due Date - {task['due_date']}")
             print(f"Status - {task['status']}")
-            #Pause variable as an input, facilitates this typical return-pause functionality... Old-School!
-            pause = input("\nPress RETURN to Continue...")
+            '''Pause variable as an input, facilitates this typical return-pause 
+            functionality... Old-School!'''
+            input("\nPress RETURN to Continue...")
         else:
             print("Invalid task number")
     except Exception as e:
@@ -68,13 +70,14 @@ def show_tasks(tasks):
         current_date = datetime.now()
 
         for index, task in enumerate(tasks,1):
-        # iterates over each item in tasks whilst keeping track of the index, index starts at 1 for ease
+            '''iterates over each item in tasks whilst keeping track of the index, 
+            index starts at 1 for ease.'''
 
             due_date = datetime.strptime(task['due_date'], "%Y-%m-%d")
             #creates local variable of due_date, too bulky & unsightly otherwise
 
             # Sets each row to a different colour depending on due_date & status
-            # RED = late due date and incomplete, ORANGE = late due date but complete, GREEN = timely due date 
+            # RED = late due date and incomplete, ORANGE = late due date but complete, GREEN = timely due date
             if due_date < current_date and task['status'] != "Completed" :
                 table.add_row(str(index), task['name'], task['due_date'], task['status'], style="white on red")
             elif due_date < current_date and task['status'] == "Completed" :
@@ -96,14 +99,27 @@ def add_task(task_dir, tasks):
 
     # takes in a description, due date, applies a status of "Pending" and appends to tasks
     try:
-        name = input("Enter task name: ")
-        description = input("Enter task description: ")
-        due_date = input("Enter due date (YYYY-MM-DD): ")
+        try:
+            name = str(input("Enter task name: ")).strip()
+            if not name:
+                raise ValueError("Name cannot be empty")
+            description = input("Enter task description: ")
+            if not description:
+                raise ValueError("Description cannot be empty")
+            due_date = input("Enter due date (YYYY-MM-DD): ")
+            if not validate_date(due_date):
+                raise ValueError("Invalid due date format. Please use YYYY-MM-DD.")
+            elif not due_date:
+                raise ValueError("Date cannot be empty")
+        except Exception as e:
+            print(f"Error: {e}")
+            input("^^^")
         tasks.append({"name": name, "description": description, "due_date": due_date, "status": "Pending"})
         save_tasks(task_dir, tasks)
         print("Task added successfully.")
-    except:
-        print("Failed to add Task successfully")
+    except Exception as e:
+        print(f"Failed to add Task sucessfully: {e}")
+        input("^^^")
 
 def delete_task(task_dir, tasks):
     while True:
@@ -116,14 +132,12 @@ def delete_task(task_dir, tasks):
                 # Facilitation of the "(or 0 to cancel)" functionality
                 print("Deletion canceled.")
                 break
-            elif 0 <= task_index < len(tasks):
+            if 0 <= task_index < len(tasks):
                 #ensures index is within range & deletes task with the index selected before breaking loop
                 del tasks[task_index]
                 save_tasks(task_dir, tasks)
                 print("Task deleted successfully.")
                 break
-            else:
-                print("Invalid task number. Please enter a valid task number.")
         except ValueError as ve:
             #more pretty error exception handling
             print(f"Error: {ve}")
@@ -143,18 +157,13 @@ def update_task(tasks):
     while True:
         try:
             index = int(input("Enter task number to update: ")) - 1
-            if not (0 <= index < len(tasks)):
+            if not(0 <= index < len(tasks)):
                 #ensures index is within range, lest raises a ValueError
                 raise ValueError("Invalid task number.")
-            
             task_to_update = tasks[index]
-            
             # Provides a selection for what attribute is wanted to be changed on a task
-
             print("Select what you want to update:\n1. Name\n2. Description\n3. Due Date\n4. Status")
-            
             option = input("Enter your choice (1-4): ").strip()
-            
             if option == '1':
                 while True:
                     try:
@@ -182,6 +191,8 @@ def update_task(tasks):
                         new_due_date = input("Enter new due date (YYYY-MM-DD): ").strip()
                         if not validate_date(new_due_date):
                             raise ValueError("Invalid due date format. Please use YYYY-MM-DD.")
+                        elif not new_due_date:
+                            raise ValueError("Date cannot be empty")
                         task_to_update["due_date"] = new_due_date
                         break
                     except ValueError as ve:
@@ -198,7 +209,6 @@ def update_task(tasks):
             else:
                 print("Invalid option. Please select a number between 1 and 4.")
                 continue
-            
             save_tasks(TASKS_FILE, tasks)
             print("Task updated successfully.")
             break
@@ -255,7 +265,7 @@ def main():
                     raise Exception("Invalid input")
 
         except:
-            pause = input("Invalid Input (press ENTER to retry):")
+            input("Invalid Input (press ENTER to retry):")
 
 
 if __name__ == "__main__":
