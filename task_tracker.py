@@ -24,18 +24,18 @@ def reset_table():
     table.add_column("Due Date", style="green")
     table.add_column("Status", justify="right", style="green")
 
-def load_tasks():
+def load_tasks(task_json):
 
     # Uses os path to oepn TASKS_FILE json, if it exists. Uses json library to open loaded json
-    if os.path.exists(TASKS_FILE):
-        with open(TASKS_FILE, 'r') as taskfile:
+    if os.path.exists(task_json):
+        with open(task_json, 'r') as taskfile:
             return json.load(taskfile)
     else:
         return []
 
-def save_tasks(tasks):
+def save_tasks(task_dir, tasks):
     # with the TASKS_FILE json open as taskfile, append tasks to taskfile with an indent of 4 so it isn't grumpy
-    with open(TASKS_FILE, 'w') as taskfile:
+    with open(task_dir, 'w') as taskfile:
         json.dump(tasks, taskfile, indent=4)
 
 def show_task(tasks, task_index):
@@ -82,13 +82,14 @@ def show_tasks(tasks):
             else:
                 table.add_row(str(index), task['name'], task['due_date'], task['status'], style="white on green")
 
+        # Prints the table using rich library to make things pretty
         console.print(table)
 
     # if tasks don't exist, print the below
     else:
         print("No tasks found.")
 
-def add_task(tasks):
+def add_task(task_dir, tasks):
 
     # Clears terminal, generally "prettier" :)
     os.system('clear')
@@ -99,34 +100,37 @@ def add_task(tasks):
         description = input("Enter task description: ")
         due_date = input("Enter due date (YYYY-MM-DD): ")
         tasks.append({"name": name, "description": description, "due_date": due_date, "status": "Pending"})
-        save_tasks(tasks)
+        save_tasks(task_dir, tasks)
         print("Task added successfully.")
     except:
         print("Failed to add Task successfully")
 
-def delete_task(tasks):
+def delete_task(task_dir, tasks):
     while True:
-        # Show existing tasks
-        show_tasks(tasks)
 
         # Get user input for the task number to delete
         try:
+            # takes index and removes 1 (to "interface" it to how python handles indexes)
             task_index = int(input("Enter task number to delete (or 0 to cancel): ")) - 1
             if task_index == -1:
+                # Facilitation of the "(or 0 to cancel)" functionality
                 print("Deletion canceled.")
                 break
             elif 0 <= task_index < len(tasks):
+                #ensures index is within range & deletes task with the index selected before breaking loop
                 del tasks[task_index]
-                save_tasks(tasks)
+                save_tasks(task_dir, tasks)
                 print("Task deleted successfully.")
                 break
             else:
                 print("Invalid task number. Please enter a valid task number.")
-        except ValueError:
-            print("Invalid input. Please enter a valid task number.")
+        except ValueError as ve:
+            #more pretty error exception handling
+            print(f"Error: {ve}")
 
 
 def validate_date(date_string):
+    # function created to validate the date_string is in Y-m-d format
     try:
         datetime.strptime(date_string, '%Y-%m-%d')
         return True
@@ -140,15 +144,15 @@ def update_task(tasks):
         try:
             index = int(input("Enter task number to update: ")) - 1
             if not (0 <= index < len(tasks)):
+                #ensures index is within range, lest raises a ValueError
                 raise ValueError("Invalid task number.")
             
             task_to_update = tasks[index]
             
-            print("Select what you want to update:")
-            print("1. Name")
-            print("2. Description")
-            print("3. Due Date")
-            print("4. Status")
+            # Provides a selection for what attribute is wanted to be changed on a task
+
+            print("Select what you want to update:\n1. Name\n2. Description\n3. Due Date\n4. Status")
+            
             option = input("Enter your choice (1-4): ").strip()
             
             if option == '1':
@@ -195,7 +199,7 @@ def update_task(tasks):
                 print("Invalid option. Please select a number between 1 and 4.")
                 continue
             
-            save_tasks(tasks)
+            save_tasks(TASKS_FILE, tasks)
             print("Task updated successfully.")
             break
         except ValueError as ve:
@@ -210,7 +214,7 @@ def update_task(tasks):
 def main():
 
     # Load tasks from the JSON file
-    tasks = load_tasks()
+    tasks = load_tasks(TASKS_FILE)
 
     while True:
 
@@ -237,9 +241,10 @@ def main():
                         except ValueError:
                             print("Invalid input. Please enter a valid task number.")
                 case '2':
-                    add_task(tasks)
+                    add_task(TASKS_FILE, tasks)
                 case '3':
-                    delete_task(tasks)
+                    show_tasks(tasks)
+                    delete_task(TASKS_FILE, tasks)
                 case '4':
                     update_task(tasks)
                 case '5':
