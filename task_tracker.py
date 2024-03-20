@@ -161,61 +161,64 @@ def update_task(tasks):
                 #ensures index is within range, lest raises a ValueError
                 raise ValueError("Invalid task number.")
             task_to_update = tasks[index]
-            # Provides a selection for what attribute is wanted to be changed on a task
-            print("Select what you want to update:\n1. Name\n2. Description\n3. Due Date\n4. Status")
-            option = input("Enter your choice (1-4): ").strip()
-            if option == '1':
-                while True:
-                    try:
-                        new_name = str(input("Enter new name: ")).strip()
-                        if not new_name:
-                            raise ValueError("Name cannot be empty")
-                        task_to_update["name"] = new_name
-                        break
-                    except Exception as e:
-                        print(f"Error updating name: {e}")
-            elif option == '2':
-                while True:
-                    try:
-                        new_description = input("Enter new description: ").strip()
-                        if not new_description:
-                            raise ValueError("Description cannot be empty")
-                        task_to_update["description"] = new_description
-                        break
-                    except Exception as e:
-                        print(f"Error updating description: {e}")
-
-            elif option == '3':
-                while True:
-                    try:
-                        new_due_date = input("Enter new due date (YYYY-MM-DD): ").strip()
-                        if not validate_date(new_due_date):
-                            raise ValueError("Invalid due date format. Please use YYYY-MM-DD.")
-                        elif not new_due_date:
-                            raise ValueError("Date cannot be empty")
-                        task_to_update["due_date"] = new_due_date
-                        break
-                    except ValueError as ve:
-                        print(f"Error: {ve}")
-            elif option == '4':
-                try:
-                    valid_statuses = ["In Progress", "Pending", "Completed"]
-                    new_status = input("Enter new status (In Progress, Pending, or Completed): ").strip()
-                    if new_status not in valid_statuses:
-                        raise ValueError("Invalid status. Please choose from 'In Progress', 'Pending', or 'Completed'.")
-                    task_to_update["status"] = new_status
-                except Exception as e:
-                    print(f"Error updating status: {e}")
-            else:
-                print("Invalid option. Please select a number between 1 and 4.")
-                continue
-            save_tasks(TASKS_FILE, tasks)
-            print("Task updated successfully.")
             break
         except ValueError as ve:
             print(f"Error: {ve}")
         except Exception as e:
             print(f"An error occurred: {e}")
+    while True:
+        # Provides a selection for what attribute is wanted to be changed on a task
+        print("Select what you want to update:\n1. Name\n2. Description\n3. Due Date\n4. Status")
+        option = input("Enter your choice (1-4): ").strip()
+        if option == '1':
+            while True:
+                try:
+                    new_name = str(input("Enter new name: ")).strip()
+                    if not new_name:
+                        raise ValueError("Name cannot be empty")
+                    task_to_update["name"] = new_name
+                    break
+                except Exception as e:
+                    print(f"Error updating name: {e}")
+        elif option == '2':
+            while True:
+                try:
+                    new_description = input("Enter new description: ").strip()
+                    if not new_description:
+                        raise ValueError("Description cannot be empty")
+                    task_to_update["description"] = new_description
+                    break
+                except Exception as e:
+                    print(f"Error updating description: {e}")
+
+        elif option == '3':
+            while True:
+                try:
+                    new_due_date = input("Enter new due date (YYYY-MM-DD): ").strip()
+                    if not validate_date(new_due_date):
+                        raise ValueError("Invalid due date format. Please use YYYY-MM-DD.")
+                    elif not new_due_date:
+                        raise ValueError("Date cannot be empty")
+                    task_to_update["due_date"] = new_due_date
+                    break
+                except ValueError as ve:
+                    print(f"Error: {ve}")
+        elif option == '4':
+            try:
+                valid_statuses = ["In Progress", "Pending", "Completed"]
+                new_status = input("Enter new status (In Progress, Pending, or Completed): ").strip()
+                if new_status not in valid_statuses:
+                    raise ValueError("Invalid status. Please choose from 'In Progress', 'Pending', or 'Completed'.")
+                task_to_update["status"] = new_status
+            except Exception as e:
+                print(f"Error updating status: {e}")
+        else:
+            print("Invalid option. Please select a number between 1 and 4.")
+            continue
+        save_tasks(TASKS_FILE, tasks)
+        print("Task updated successfully.")
+        break
+
 
 
 
