@@ -19,12 +19,16 @@ def reset_table():
 
     table.add_column("T. No.", style="blue")
     table.add_column("Task", style="cyan")
-    table.add_column("Due Date", style="green")
-    table.add_column("Status", justify="right", style="green")
+    table.add_column("Importance", style="cyan")
+    table.add_column("Has Description", style="green")
+    table.add_column("Date Made", style="yellow")
+    table.add_column("Due Date", style="yellow")
+    table.add_column("Status", justify="right", style="orange1")
+    table.add_column("RAG rating", style="orange1")
 
 def load_tasks(task_json):
 
-    # Uses os path to oepn TASKS_FILE json, if it exists. Uses json library to open loaded json
+    # Uses os path to open TASKS_FILE json, if it exists. Uses json library to open loaded json
     if os.path.exists(task_json):
         with open(task_json, 'r', encoding="utf-8") as taskfile:
             return json.load(taskfile)
@@ -48,8 +52,12 @@ def show_task(tasks, task_index):
             print(f"\n[bold red]{task['name']}[/bold red] [cyan]Task Details[/cyan]")
             print(f"Task Number - {task_index + 1}")
             print(f"Description - {task['description']}")
+            print(f"Has Description - {task['has_description']}")
+            print(f"Importance - {task['importance']}")
+            print(f"Date Made - {task['date_made']}")
             print(f"Due Date - {task['due_date']}")
             print(f"Status - {task['status']}")
+            print(f"RAG rating - {task['rag']}")
             '''Pause variable as an input, facilitates this typical return-pause 
             functionality... Old-School!'''
             input("\nPress RETURN to Continue...")
@@ -59,6 +67,18 @@ def show_task(tasks, task_index):
         #Exception handling, something I learned to make things pretty & professional : )
         print(f"An error occurred while showing task details: {e}")
 
+def check_rag(due_date_string, status):
+
+    current_date = datetime.now()
+
+    due_date = datetime.strptime(due_date_string, '%Y-%m-%d')
+
+    if due_date < current_date and status != "Completed" :
+        return "red"
+    elif due_date < current_date and status == "Completed" :
+        return "amber"
+    else:
+        return "green"
 
 def show_tasks(tasks):
 
@@ -66,24 +86,20 @@ def show_tasks(tasks):
     if tasks:
         #calls reset_table function for aesthetic reasons
         reset_table()
-        #utlised datetime library to create a variable of the current date
-        current_date = datetime.now()
 
         for index, task in enumerate(tasks,1):
             '''iterates over each item in tasks whilst keeping track of the index, 
             index starts at 1 for ease.'''
-
-            due_date = datetime.strptime(task['due_date'], "%Y-%m-%d")
-            #creates local variable of due_date, too bulky & unsightly otherwise
-
-            # Sets each row to a different colour depending on due_date & status
+            task['rag'] = check_rag(str(task['due_date']), task['status'])
+            # Sets each row to a different colour depending on rag rating
             # RED = late due date and incomplete, ORANGE = late due date but complete, GREEN = timely due date
-            if due_date < current_date and task['status'] != "Completed" :
-                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="white on red")
-            elif due_date < current_date and task['status'] == "Completed" :
-                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="white on orange_red1")
-            else:
-                table.add_row(str(index), task['name'], task['due_date'], task['status'], style="white on green")
+            if task['rag'] == "red":
+                table.add_row(str(index), task['name'], task['importance'], str(task['has_description']), task['date_made'], task['due_date'], task['status'], task['rag'], style="white on red")
+            elif task['rag'] == "amber" :
+                table.add_row(str(index), task['name'], task['importance'], str(task['has_description']), task['date_made'], task['due_date'], task['status'], task['rag'], style="white on orange_red1")
+            elif task['rag'] == "green" :
+                table.add_row(str(index), task['name'], task['importance'], str(task['has_description']), task['date_made'], task['due_date'], task['status'], task['rag'], style="white on green")
+
 
         # Prints the table using rich library to make things pretty
         console.print(table)
@@ -105,21 +121,29 @@ def add_task(task_dir, tasks):
                 raise ValueError("Name cannot be empty")
             description = input("Enter task description: ")
             if not description:
-                raise ValueError("Description cannot be empty")
+                has_description = False
+            else:
+                has_description = True
+            valid_importance = ["high", "medium", "low"]
+            importance = str(input("Enter task importance (high, medium, low): "))
+            if importance not in valid_importance:
+                raise ValueError("Invalid importance. Please choose from 'high', 'medium', or 'low'.")
             due_date = input("Enter due date (YYYY-MM-DD): ")
             if not validate_date(due_date):
                 raise ValueError("Invalid due date format. Please use YYYY-MM-DD.")
             elif not due_date:
                 raise ValueError("Date cannot be empty")
+            date_made = str(datetime.today().strftime('%Y-%m-%d'))
+            status = "Pending"
         except Exception as e:
             print(f"Error: {e}")
             input("^^^")
-        tasks.append({"name": name, "description": description, "due_date": due_date, "status": "Pending"})
+        tasks.append({"name": name, "description": description, "has_description": has_description, "importance": importance, "date_made": date_made, "due_date": due_date, "status": status, "rag": check_rag(due_date,status)})
         save_tasks(task_dir, tasks)
         print("Task added successfully.")
-    except Exception as e:
-        print(f"Failed to add Task sucessfully: {e}")
-        input("^^^")
+    except:
+        print(f"Failed to add Task sucessfully")
+
 
 def delete_task(task_dir, tasks):
     while True:
@@ -168,8 +192,8 @@ def update_task(tasks):
             print(f"An error occurred: {e}")
     while True:
         # Provides a selection for what attribute is wanted to be changed on a task
-        print("Select what you want to update:\n1. Name\n2. Description\n3. Due Date\n4. Status")
-        option = input("Enter your choice (1-4): ").strip()
+        print("Select what you want to update:\n1. Name\n2. Description\n3. Importance\n4. Due Date\n5. Status\n6. RAG Rating")
+        option = input("Enter your choice (1-7): ").strip()
         if option == '1':
             while True:
                 try:
@@ -185,13 +209,21 @@ def update_task(tasks):
                 try:
                     new_description = input("Enter new description: ").strip()
                     if not new_description:
-                        raise ValueError("Description cannot be empty")
+                        task_to_update['has_description'] = "False"
                     task_to_update["description"] = new_description
                     break
                 except Exception as e:
                     print(f"Error updating description: {e}")
-
         elif option == '3':
+            try:
+                valid_importance = ["high", "medium", "low"]
+                new_importance = input("Enter new importance (high, medium, low): ").strip()
+                if new_importance not in valid_importance:
+                    raise ValueError("Invalid importance. Please choose from 'high', 'medium', or 'low'.")
+                task_to_update["importance"] = new_importance
+            except Exception as e:
+                print(f"Error updating importance: {e}")
+        elif option == '4':
             while True:
                 try:
                     new_due_date = input("Enter new due date (YYYY-MM-DD): ").strip()
@@ -203,7 +235,7 @@ def update_task(tasks):
                     break
                 except ValueError as ve:
                     print(f"Error: {ve}")
-        elif option == '4':
+        elif option == '5':
             try:
                 valid_statuses = ["In Progress", "Pending", "Completed"]
                 new_status = input("Enter new status (In Progress, Pending, or Completed): ").strip()
@@ -212,13 +244,21 @@ def update_task(tasks):
                 task_to_update["status"] = new_status
             except Exception as e:
                 print(f"Error updating status: {e}")
+        elif option == '6':
+            # Update RAG Rating
+            try:
+                new_rag = input("Enter new RAG rating (red, amber, green): ").strip().lower()
+                if new_rag not in ["red", "amber", "green"]:
+                    raise ValueError("Invalid RAG rating. Please choose from 'red', 'amber', or 'green'.")
+                task_to_update["rag"] = new_rag
+            except Exception as e:
+                print(f"Error updating RAG rating: {e}")
         else:
-            print("Invalid option. Please select a number between 1 and 4.")
-            continue
+            print("Invalid option. Please select a number between 1 and 7.")
+            break
         save_tasks(TASKS_FILE, tasks)
         print("Task updated successfully.")
         break
-
 
 
 

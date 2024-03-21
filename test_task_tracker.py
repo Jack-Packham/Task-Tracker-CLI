@@ -21,8 +21,12 @@ def test_load_tasks_non_existing_file(temporary_tasks_file):
 # Test case for loading tasks from an existing tasks json file
 def test_load_tasks_existing_file(temporary_tasks_file):
     # mock tasks data set
-    tasks_data = [{"name": "Task 1", "description": "Description 1", "due_date": "2024-12-31", "status": "Pending"},
-                  {"name": "Task 2", "description": "Description 2", "due_date": "2025-01-15", "status": "In Progress"}]
+    tasks_data = [
+        {"name": "Task 1", "description": "Description 1", "has_description": True, "importance": "high", 
+         "date_made": "2024-10-01", "due_date": "2024-12-31", "status": "Pending", "rag": "green"},
+        {"name": "Task 2", "description": "", "has_description": False, "importance": "low", 
+         "date_made": "2023-03-01", "due_date": "2024-11-31", "status": "In Progress", "rag": "green"},
+    ]
     
     #usage of inbuilt open library with indent (as used in application)
     with open(temporary_tasks_file, 'w') as f:
@@ -38,8 +42,12 @@ def test_load_tasks_existing_file(temporary_tasks_file):
 # Test case for saving tasks to a file
 def test_save_tasks(temporary_tasks_file):
     # mock tasks data set (again lol)
-    tasks_data = [{"name": "Task 1", "description": "Description 1", "due_date": "2024-12-31", "status": "Pending"},
-                  {"name": "Task 2", "description": "Description 2", "due_date": "2025-01-15", "status": "In Progress"}]
+    tasks_data = [
+        {"name": "Task 1", "description": "Description 1", "has_description": True, "importance": "high", 
+         "date_made": "2024-10-01", "due_date": "2024-12-31", "status": "Pending", "rag": "green"},
+        {"name": "Task 2", "description": "", "has_description": False, "importance": "low", 
+         "date_made": "2023-03-01", "due_date": "2024-11-31", "status": "In Progress", "rag": "green"},
+    ]
     
     save_tasks(temporary_tasks_file, tasks_data)
     
@@ -53,7 +61,7 @@ def test_add_task(temporary_tasks_file, monkeypatch):
     tasks_data = []
 
     # Mock user input using monkeypatch (was a pain to work)
-    monkeypatch.setattr("sys.stdin", StringIO("AbCdEfG123\nTask Description\n2024-12-31\n"))
+    monkeypatch.setattr("sys.stdin", StringIO("AbCdEfG123\nTask Description\nhigh\n2024-12-31\n"))
 
     add_task(temporary_tasks_file, tasks_data)
 
@@ -67,8 +75,12 @@ def test_add_task(temporary_tasks_file, monkeypatch):
 # Test case for deleting a task
 def test_delete_task(temporary_tasks_file, monkeypatch):
     # Mock task data set (bet you never saw that coming)
-    tasks_data = [{"name": "Task 1", "description": "Description 1", "due_date": "2024-12-31", "status": "Pending"},
-                  {"name": "Task 2", "description": "Description 2", "due_date": "2025-01-15", "status": "In Progress"}]
+    tasks_data = [
+        {"name": "Task 1", "description": "Description 1", "has_description": True, "importance": "high", 
+         "date_made": "2024-10-01", "due_date": "2024-12-31", "status": "Pending", "rag": "green"},
+        {"name": "Task 2", "description": "", "has_description": False, "importance": "low", 
+         "date_made": "2023-03-01", "due_date": "2024-11-31", "status": "In Progress", "rag": "green"},
+    ]
     
     # with open library to write to temp tasks.json with mock data
     with open(temporary_tasks_file, "w") as f:
